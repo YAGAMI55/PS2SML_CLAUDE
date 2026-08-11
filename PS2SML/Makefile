@@ -1,3 +1,6 @@
+EE_CC      = mips64r5900el-ps2-elf-gcc
+EE_STRIP   = mips64r5900el-ps2-elf-strip
+
 EE_OBJS = \
 	main.o \
 	config.o \
