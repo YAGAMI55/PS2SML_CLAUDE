@@ -9,8 +9,13 @@ EE_OBJS = \
 
 EE_LIBS = \
 	-lfreetype \
+	-lgskit_toolkit \
 	-lgskit \
 	-ldmakit \
+	-ljpeg_ps2_addons \
+	-ljpeg \
+	-lpng16 \
+	-lz \
 	-lpad \
 	-lfileXio \
 	-lkernel
