@@ -386,6 +386,46 @@ jobs:
           test -f "${PS2SDK}/ports/include/freetype2/freetype/freetype.h"
 
       # ============================================================
+      # 9.5. Diagnose gsKit PNG/JPEG texture symbols
+      # ============================================================
+
+      - name: Diagnose gsKit texture symbols
+        shell: bash
+        run: |
+          set -e
+
+          export PATH="${PS2DEV}/bin:${PS2DEV}/ee/bin:${PS2DEV}/iop/bin:${PS2DEV}/dvp/bin:${PS2SDK}/bin:${PATH}"
+
+          echo "=== Libraries available in GSKIT/lib ==="
+          ls -la "${GSKIT}/lib" || true
+
+          echo
+          echo "=== Libraries available in PS2SDK ports/lib ==="
+          ls -la "${PS2SDK}/ports/lib" || true
+
+          echo
+          echo "=== Searching all .a files for gsKit_texture_png ==="
+          for lib in "${GSKIT}"/lib/*.a "${PS2SDK}"/ports/lib/*.a "${PS2SDK}"/ee/lib/*.a; do
+            [ -f "$lib" ] || continue
+            if mips64r5900el-ps2-elf-nm "$lib" 2>/dev/null | grep -q "T gsKit_texture_png"; then
+              echo "FOUND gsKit_texture_png in: $lib"
+            fi
+          done
+
+          echo
+          echo "=== Searching all .a files for gsKit_texture_jpeg_scale ==="
+          for lib in "${GSKIT}"/lib/*.a "${PS2SDK}"/ports/lib/*.a "${PS2SDK}"/ee/lib/*.a; do
+            [ -f "$lib" ] || continue
+            if mips64r5900el-ps2-elf-nm "$lib" 2>/dev/null | grep -q "T gsKit_texture_jpeg_scale"; then
+              echo "FOUND gsKit_texture_jpeg_scale in: $lib"
+            fi
+          done
+
+          echo
+          echo "=== Full symbol dump of libgskit.a related to texture/png/jpeg ==="
+          mips64r5900el-ps2-elf-nm "${GSKIT}/lib/libgskit.a" 2>/dev/null | grep -iE "texture|png|jpeg" || echo "(no matches found in libgskit.a)"
+
+      # ============================================================
       # 10. Build project
       # ============================================================
 
