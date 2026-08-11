@@ -9,7 +9,8 @@ EE_OBJS = \
 
 EE_LIBS = \
 	-lfreetype \
-	-lgs \
+	-lgskit \
+	-ldmakit \
 	-lpad \
 	-lfileXio \
 	-lkernel
