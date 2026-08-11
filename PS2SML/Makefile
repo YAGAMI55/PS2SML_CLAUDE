@@ -1,488 +1,61 @@
-name: Build PS2 Simple Loader
-
-on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    env:
-      PS2DEV: /tmp/ps2dev
-      PS2SDK: /tmp/ps2dev/ps2sdk
-      GSKIT: /tmp/ps2dev/gsKit
-
-    steps:
-
-      # ============================================================
-      # 1. Host dependencies
-      # ============================================================
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install host dependencies
-        shell: bash
-        run: |
-          set -e
-
-          sudo apt-get update
-
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            git \
-            curl \
-            wget \
-            tar \
-            gzip \
-            xz-utils \
-            bzip2 \
-            patch \
-            texinfo \
-            flex \
-            bison \
-            gettext \
-            libgsl-dev \
-            libgmp-dev \
-            libmpfr-dev \
-            libmpc-dev \
-            zlib1g-dev \
-            autopoint \
-            libtool
-
-      # ============================================================
-      # 2. Install official prebuilt PS2DEV
-      # ============================================================
-
-      - name: Install PS2DEV prebuilt toolchain
-        shell: bash
-        run: |
-          set -e
-
-          echo "=== Preparing PS2DEV ==="
-
-          rm -rf "${PS2DEV}"
-          mkdir -p "${PS2DEV}"
-
-          cd /tmp
-
-          rm -f ps2dev-latest.tar.gz
-
-          echo "=== Downloading official PS2DEV prebuilt ==="
-
-          curl -fL \
-            --retry 5 \
-            --retry-delay 2 \
-            -o ps2dev-latest.tar.gz \
-            https://github.com/ps2dev/ps2dev/releases/download/latest/ps2dev-ubuntu-latest.tar.gz
-
-          echo "=== Downloaded archive ==="
-
-          ls -lh ps2dev-latest.tar.gz
-
-          file ps2dev-latest.tar.gz
-
-          echo "=== Extracting PS2DEV ==="
-
-          tar -xzf ps2dev-latest.tar.gz \
-            --strip-components 1 \
-            -C "${PS2DEV}"
-
-          echo "=== PS2DEV directory ==="
-
-          ls -la "${PS2DEV}"
-
-      # ============================================================
-      # 3. Configure environment
-      # ============================================================
-
-      - name: Configure PS2DEV environment
-        shell: bash
-        run: |
-          set -e
-
-          echo "=== Configuring PS2DEV ==="
-
-          {
-            echo "PS2DEV=${PS2DEV}"
-            echo "PS2SDK=${PS2SDK}"
-            echo "GSKIT=${GSKIT}"
-
-            echo "${PS2DEV}/bin"
-            echo "${PS2DEV}/ee/bin"
-            echo "${PS2DEV}/iop/bin"
-            echo "${PS2DEV}/dvp/bin"
-            echo "${PS2SDK}/bin"
-          } >> "$GITHUB_PATH"
-
-          {
-            echo "PS2DEV=${PS2DEV}"
-            echo "PS2SDK=${PS2SDK}"
-            echo "GSKIT=${GSKIT}"
-          } >> "$GITHUB_ENV"
-
-          export PATH="${PS2DEV}/bin:${PS2DEV}/ee/bin:${PS2DEV}/iop/bin:${PS2DEV}/dvp/bin:${PS2SDK}/bin:${PATH}"
-
-          echo "=== Environment ==="
-
-          echo "PS2DEV=${PS2DEV}"
-          echo "PS2SDK=${PS2SDK}"
-          echo "GSKIT=${GSKIT}"
-
-          echo
-          echo "=== PATH ==="
-          echo "${PATH}"
-
-      # ============================================================
-      # 4. Verify PS2DEV
-      # ============================================================
-
-      - name: Verify PS2DEV toolchain
-        shell: bash
-        run: |
-          set -e
-
-          export PATH="${PS2DEV}/bin:${PS2DEV}/ee/bin:${PS2DEV}/iop/bin:${PS2DEV}/dvp/bin:${PS2SDK}/bin:${PATH}"
-
-          echo "=== PS2DEV ==="
-          test -d "${PS2DEV}"
-          ls -la "${PS2DEV}"
-
-          echo
-          echo "=== PS2SDK ==="
-          test -d "${PS2SDK}"
-          ls -la "${PS2SDK}"
-
-          echo
-          echo "=== Toolchain ==="
-
-          command -v mips64r5900el-ps2-elf-gcc
-          command -v mips64r5900el-ps2-elf-ar
-          command -v mips64r5900el-ps2-elf-ranlib
-          command -v mips64r5900el-ps2-elf-strip
-
-          echo
-          echo "=== GCC ==="
-
-          mips64r5900el-ps2-elf-gcc --version
-
-          echo
-          echo "=== AR ==="
-
-          mips64r5900el-ps2-elf-ar --version
-
-          echo
-          echo "=== PS2SDK ==="
-
-          test -d "${PS2SDK}/ee"
-          test -d "${PS2SDK}/iop"
-
-      # ============================================================
-      # 5. Download FreeType
-      # ============================================================
-
-      - name: Download FreeType 2.13.3
-        shell: bash
-        run: |
-          set -e
-
-          cd /tmp
-
-          rm -rf freetype-2.13.3
-          rm -f freetype-2.13.3.tar.gz
-
-          echo "=== Downloading FreeType 2.13.3 ==="
-
-          curl -fL \
-            --retry 5 \
-            --retry-delay 2 \
-            -o freetype-2.13.3.tar.gz \
-            https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.gz \
-          || curl -fL \
-            --retry 5 \
-            --retry-delay 2 \
-            -o freetype-2.13.3.tar.gz \
-            https://sourceforge.net/projects/freetype/files/freetype2/2.13.3/freetype-2.13.3.tar.gz/download
-
-          echo "=== Archive ==="
-
-          ls -lh freetype-2.13.3.tar.gz
-
-          file freetype-2.13.3.tar.gz
-
-          echo "=== Extracting ==="
-
-          tar -xzf freetype-2.13.3.tar.gz
-
-          test -d /tmp/freetype-2.13.3
-
-          echo "=== FreeType source ==="
-
-          ls -la /tmp/freetype-2.13.3
-
-      # ============================================================
-      # 6. Build FreeType
-      # ============================================================
-
-      - name: Build FreeType for PS2
-        shell: bash
-        run: |
-          set -e
-
-          export PATH="${PS2DEV}/bin:${PS2DEV}/ee/bin:${PS2DEV}/iop/bin:${PS2DEV}/dvp/bin:${PS2SDK}/bin:${PATH}"
-
-          cd /tmp/freetype-2.13.3
-
-          echo "=== Preparing FreeType ==="
-
-          rm -rf build-ps2
-
-          mkdir -p build-ps2
-
-          cd build-ps2
-
-          export CC=mips64r5900el-ps2-elf-gcc
-          export AR=mips64r5900el-ps2-elf-ar
-          export RANLIB=mips64r5900el-ps2-elf-ranlib
-          export STRIP=mips64r5900el-ps2-elf-strip
-
-          echo "=== Compiler ==="
-
-          "${CC}" --version
-
-          echo
-          echo "=== Configuring FreeType ==="
-
-          ../configure \
-            --host=mips64r5900el-ps2-elf \
-            --prefix="${PS2SDK}/ports" \
-            --disable-shared \
-            --enable-static \
-            --without-zlib \
-            --without-bzip2 \
-            --without-png \
-            --without-harfbuzz \
-            --without-brotli \
-            --without-librsvg
-
-          echo
-          echo "=== Building FreeType ==="
-
-          make -j"$(nproc)" \
-            FREETYPE_SUBMODULES=
-
-          echo
-          echo "=== FreeType build result ==="
-
-          find . \
-            -type f \
-            -name "libfreetype.a" \
-            -print
-
-          test -f "./.libs/libfreetype.a"
-
-      # ============================================================
-      # 7. Install FreeType into PS2SDK
-      # ============================================================
-
-      - name: Install FreeType into PS2SDK
-        shell: bash
-        run: |
-          set -e
-
-          cd /tmp/freetype-2.13.3/build-ps2
-
-          echo "=== Installing FreeType ==="
-
-          make install
-
-          echo
-          echo "=== Installed FreeType library ==="
-
-          find "${PS2SDK}/ports" \
-            -type f \
-            -name "libfreetype.a" \
-            -print
-
-          echo
-          echo "=== Installed FreeType headers ==="
-
-          test -f "${PS2SDK}/ports/include/freetype2/freetype/freetype.h"
-
-          ls -la "${PS2SDK}/ports/lib" || true
-
-      # ============================================================
-      # 8. Fix pkg-config paths from prebuilt PS2DEV
-      # ============================================================
-
-      - name: Fix PS2DEV pkg-config paths
-        shell: bash
-        run: |
-          set -e
-
-          echo "=== Fixing pkg-config paths ==="
-
-          if [ -d "${PS2SDK}/ports/lib/pkgconfig" ]; then
-            sed -i'' \
-              "s|/__w/ps2dev/ps2dev/ps2dev/ps2sdk/ports|${PS2SDK}/ports|g" \
-              "${PS2SDK}"/ports/lib/pkgconfig/*.pc \
-              2>/dev/null || true
-          fi
-
-          if [ -d "${GSKIT}/lib/pkgconfig" ]; then
-            sed -i'' \
-              "s|/__w/ps2dev/ps2dev/ps2dev/ps2sdk/ports|${PS2SDK}/ports|g" \
-              "${GSKIT}"/lib/pkgconfig/*.pc \
-              2>/dev/null || true
-
-            sed -i'' \
-              "s|/__w/ps2dev/ps2dev/ps2dev/gsKit|${GSKIT}/|g" \
-              "${GSKIT}"/lib/pkgconfig/*.pc \
-              2>/dev/null || true
-          fi
-
-          echo "=== pkg-config paths fixed ==="
-
-      # ============================================================
-      # 9. Verify FreeType
-      # ============================================================
-
-      - name: Verify FreeType
-        shell: bash
-        run: |
-          set -e
-
-          echo "=== FreeType library ==="
-
-          find "${PS2SDK}" \
-            -type f \
-            -name "libfreetype.a" \
-            -print
-
-          echo
-          echo "=== FreeType headers ==="
-
-          find "${PS2SDK}/ports/include" \
-            -maxdepth 3 \
-            -type f \
-            -name "ft2build.h" \
-            -o \
-            -name "freetype.h" \
-            | sort
-
-          echo
-          echo "=== Final checks ==="
-
-          test -f "${PS2SDK}/ports/lib/libfreetype.a"
-          test -f "${PS2SDK}/ports/include/freetype2/freetype/freetype.h"
-
-      # ============================================================
-      # 9.5. Diagnose gsKit PNG/JPEG texture symbols
-      # ============================================================
-
-      - name: Diagnose gsKit texture symbols
-        shell: bash
-        run: |
-          set -e
-
-          export PATH="${PS2DEV}/bin:${PS2DEV}/ee/bin:${PS2DEV}/iop/bin:${PS2DEV}/dvp/bin:${PS2SDK}/bin:${PATH}"
-
-          echo "=== Libraries available in GSKIT/lib ==="
-          ls -la "${GSKIT}/lib" || true
-
-          echo
-          echo "=== Libraries available in PS2SDK ports/lib ==="
-          ls -la "${PS2SDK}/ports/lib" || true
-
-          echo
-          echo "=== Searching all .a files for gsKit_texture_png ==="
-          for lib in "${GSKIT}"/lib/*.a "${PS2SDK}"/ports/lib/*.a "${PS2SDK}"/ee/lib/*.a; do
-            [ -f "$lib" ] || continue
-            if mips64r5900el-ps2-elf-nm "$lib" 2>/dev/null | grep -q "T gsKit_texture_png"; then
-              echo "FOUND gsKit_texture_png in: $lib"
-            fi
-          done
-
-          echo
-          echo "=== Searching all .a files for gsKit_texture_jpeg_scale ==="
-          for lib in "${GSKIT}"/lib/*.a "${PS2SDK}"/ports/lib/*.a "${PS2SDK}"/ee/lib/*.a; do
-            [ -f "$lib" ] || continue
-            if mips64r5900el-ps2-elf-nm "$lib" 2>/dev/null | grep -q "T gsKit_texture_jpeg_scale"; then
-              echo "FOUND gsKit_texture_jpeg_scale in: $lib"
-            fi
-          done
-
-          echo
-          echo "=== Full symbol dump of libgskit.a related to texture/png/jpeg ==="
-          mips64r5900el-ps2-elf-nm "${GSKIT}/lib/libgskit.a" 2>/dev/null | grep -iE "texture|png|jpeg" || echo "(no matches found in libgskit.a)"
-
-      # ============================================================
-      # 10. Build project
-      # ============================================================
-
-      - name: Build PS2 Simple Loader
-        shell: bash
-        run: |
-          set -e
-
-          export PATH="${PS2DEV}/bin:${PS2DEV}/ee/bin:${PS2DEV}/iop/bin:${PS2DEV}/dvp/bin:${PS2SDK}/bin:${PATH}"
-
-          echo "=== Project ==="
-
-          cd PS2SML
-          pwd
-          ls -la
-
-          echo
-          echo "=== Building project ==="
-
-          make clean || true
-          make
-
-      # ============================================================
-      # 11. Show build artifacts
-      # ============================================================
-
-      - name: Show build artifacts
-        shell: bash
-        run: |
-          set -e
-
-          echo "=== Build artifacts ==="
-
-          find . \
-            -type f \
-            \( \
-              -name "*.elf" \
-              -o -name "*.irx" \
-              -o -name "*.a" \
-              -o -name "*.bin" \
-              -o -name "*.img" \
-            \) \
-            -print \
-            | sort
-
-      # ============================================================
-      # 12. Upload artifacts
-      # ============================================================
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ps2-simple-loader
-          path: |
-            **/*.elf
-            **/*.irx
-            **/*.bin
-            **/*.img
-            **/*.a
-          if-no-files-found: warn
+EE_CC      = mips64r5900el-ps2-elf-gcc
+EE_STRIP   = mips64r5900el-ps2-elf-strip
+
+EE_OBJS = \
+	main.o \
+	config.o \
+	graphics.o \
+	font.o
+
+EE_LIBS = \
+	-lfreetype \
+	-lgskit \
+	-ldmakit \
+	-lpad \
+	-lfileXio \
+	-lkernel
+
+EE_INCS = \
+	-I$(PS2SDK)/ports/include \
+	-I$(PS2SDK)/ports/include/freetype2 \
+	-I$(PS2SDK)/ee/include \
+	-I$(PS2SDK)/common/include \
+	-I$(GSKIT)/include \
+	-I.
+
+EE_LDFLAGS = \
+	-L$(PS2SDK)/ports/lib \
+	-L$(PS2SDK)/ee/lib \
+	-L$(GSKIT)/lib
+
+EE_CFLAGS = \
+	-D_EE \
+	-G0 \
+	-O2 \
+	-Wall \
+	-Wextra \
+	-Wno-unused-parameter \
+	-gdwarf-2 \
+	-gz
+
+EE_LDFLAGS += \
+	-Wl,-z,max-page-size=128
+
+EE_TARGET = LOADER.ELF
+
+all: $(EE_TARGET)
+
+$(EE_TARGET): $(EE_OBJS)
+	$(EE_CC) $(EE_CFLAGS) \
+		$(EE_LDFLAGS) \
+		-o $@ \
+		$(EE_OBJS) \
+		$(EE_LIBS)
+
+%.o: %.c
+	$(EE_CC) $(EE_CFLAGS) $(EE_INCS) -c $< -o $@
+
+clean:
+	rm -f $(EE_TARGET) $(EE_OBJS)
+
+.PHONY: all clean
