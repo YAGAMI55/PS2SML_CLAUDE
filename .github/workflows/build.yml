@@ -481,8 +481,13 @@ jobs:
           name: ps2-simple-loader
           path: |
             **/*.elf
+            **/*.ELF
             **/*.irx
+            **/*.IRX
             **/*.bin
+            **/*.BIN
             **/*.img
+            **/*.IMG
             **/*.a
+            **/*.A
           if-no-files-found: warn
