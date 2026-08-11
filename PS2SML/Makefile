@@ -16,6 +16,7 @@ EE_LIBS = \
 
 EE_INCS = \
 	-I$(PS2SDK)/ports/include \
+	-I$(PS2SDK)/ports/include/freetype2 \
 	-I$(PS2SDK)/ee/include \
 	-I$(PS2SDK)/common/include \
 	-I$(GSKIT)/include \
