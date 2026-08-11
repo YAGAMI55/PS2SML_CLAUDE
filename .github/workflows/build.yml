@@ -206,7 +206,12 @@ jobs:
             --retry 5 \
             --retry-delay 2 \
             -o freetype-2.13.3.tar.gz \
-            https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.gz
+            https://download.savannah.gnu.org/releases/freetype/freetype-2.13.3.tar.gz \
+          || curl -fL \
+            --retry 5 \
+            --retry-delay 2 \
+            -o freetype-2.13.3.tar.gz \
+            https://sourceforge.net/projects/freetype/files/freetype2/2.13.3/freetype-2.13.3.tar.gz/download
 
           echo "=== Archive ==="
 
