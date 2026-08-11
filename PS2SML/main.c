@@ -95,12 +95,22 @@ static void launch_elf(const char *path) {
         printf("ERROR: SifLoadElf(%s) failed: %d\n", path, result);
         fatal_error("ELF load failed.");
     }
+    if (elfData.epc == 0) {
+        printf("ERROR: SifLoadElf(%s) returned zero entry point "
+               "(epc=0x%08X, gp=0x%08X). File likely missing/misnamed on disc.\n",
+               path, (unsigned int)elfData.epc, (unsigned int)elfData.gp);
+        fatal_error("ELF entry point invalid.");
+    }
     FlushCache(0);
     FlushCache(2);
-    ExecPS2((void *)elfData.epc,
-            (void *)elfData.gp,
-            0,
-            NULL);
+    {
+        char *argv[1];
+        argv[0] = (char *)path;
+        ExecPS2((void *)elfData.epc,
+                (void *)elfData.gp,
+                1,
+                argv);
+    }
     fatal_error("ERROR: ExecPS2 returned.");
 }
 
