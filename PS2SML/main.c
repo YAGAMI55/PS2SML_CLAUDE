@@ -145,7 +145,7 @@ int main(void) {
     if (!init_pad())
         fatal_error("ERROR: controller initialization failed.");
     if (!load_config())
-        fatal_error("ERROR: cdrom0:\\PS2MLCONF\\loader.cfg not found.");
+        fatal_error("ERROR: cdrom0:\\PS2SML\\loader.cfg not found.");
     if (!init_graphics(config.video_mode))
         fatal_error("ERROR: graphics initialization failed.");
     if (!init_font(config.font_path))
