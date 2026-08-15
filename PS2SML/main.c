@@ -140,16 +140,28 @@ static void handle_input(void) {
 
 int main(void) {
     reset_input_state();
+    printf("CHECKPOINT 0: main() started\n");
+
     if (!init_iop())
         fatal_error("ERROR: IOP initialization failed.");
+    printf("CHECKPOINT 1: init_iop() OK\n");
+
     if (!init_pad())
         fatal_error("ERROR: controller initialization failed.");
+    printf("CHECKPOINT 2: init_pad() OK\n");
+
     if (!load_config())
         fatal_error("ERROR: cdrom0:\\PS2SML\\loader.cfg not found.");
+    printf("CHECKPOINT 3: load_config() OK\n");
+
     if (!init_graphics(config.video_mode))
         fatal_error("ERROR: graphics initialization failed.");
+    printf("CHECKPOINT 4: init_graphics() OK\n");
+
     if (!init_font(config.font_path))
         fatal_error("ERROR: font loading failed.");
+    printf("CHECKPOINT 5: init_font() OK - entering main loop\n");
+
     while (1) {
         handle_input();
         draw_menu(selected, show_description);
