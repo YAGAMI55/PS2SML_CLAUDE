@@ -98,10 +98,10 @@ static void set_defaults(void)
     config.color_active   = 0xFF0000FF;
 
     copy_string(config.bg_path, sizeof(config.bg_path),
-                "cdrom0:\\PS2SML\\bg.png");
+                "cdrom0:\\PS2SML\\BG.PNG");
 
     copy_string(config.font_path, sizeof(config.font_path),
-                "cdrom0:\\PS2SML\\font.ttf");
+                "cdrom0:\\PS2SML\\FONT.TTF");
 }
 
 int load_config(void)
@@ -112,7 +112,7 @@ int load_config(void)
 
     set_defaults();
 
-    f = fopen("cdrom0:\\PS2SML\\conf.cfg", "r");
+    f = fopen("cdrom0:\\PS2SML\\CONF.CFG", "r");
     if (!f)
         return 0;
 
