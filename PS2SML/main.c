@@ -157,7 +157,7 @@ int main(void) {
     printf("CHECKPOINT 2: init_pad() OK\n");
 
     if (!load_config())
-        fatal_error("ERROR: cdrom0:\\PS2SML\\loader.cfg not found.");
+        fatal_error("ERROR: cdrom0:\\PS2SML\\conf.cfg not found.");
     printf("CHECKPOINT 3: load_config() OK\n");
 
     if (!init_graphics(config.video_mode))

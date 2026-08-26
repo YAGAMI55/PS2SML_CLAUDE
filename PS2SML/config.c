@@ -112,7 +112,7 @@ int load_config(void)
 
     set_defaults();
 
-    f = fopen("cdrom0:\\PS2SML\\cfg.cfg", "r");
+    f = fopen("cdrom0:\\PS2SML\\conf.cfg", "r");
     if (!f)
         return 0;
 
