@@ -31,7 +31,8 @@ EE_INCS = \
 EE_LDFLAGS = \
 	-L$(PS2SDK)/ports/lib \
 	-L$(PS2SDK)/ee/lib \
-	-L$(GSKIT)/lib
+	-L$(GSKIT)/lib \
+	-T$(PS2SDK)/ee/startup/linkfile
 
 EE_CFLAGS = \
 	-D_EE \
