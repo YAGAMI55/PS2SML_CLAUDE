@@ -41,12 +41,18 @@ static int init_iop(void) {
         if (++retries > 400000)
             return 0;
     }
+
+    if (SifLoadModule("rom0:SIO2MAN", 0, NULL) < 0)
+        return 0;
+    if (SifLoadModule("rom0:PADMAN", 0, NULL) < 0)
+        return 0;
+
     return 1;
 }
 
 static int wait_pad_ready(int port, int slot) {
     int state;
-    int timeout = 200000;
+    int timeout = 5000;
     state = padGetState(port, slot);
     while (state != PAD_STATE_STABLE &&
            state != PAD_STATE_FINDCTP1) {
