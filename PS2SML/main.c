@@ -158,7 +158,8 @@ int main(void) {
 
     if (!load_config())
         fatal_error("ERROR: cdrom0:\\PS2SML\\conf.cfg not found.");
-    printf("CHECKPOINT 3: load_config() OK\n");
+    printf("CHECKPOINT 3: load_config() OK, item_count=%d bg_path=%s font_path=%s\n",
+           config.item_count, config.bg_path, config.font_path);
 
     if (!init_graphics(config.video_mode))
         fatal_error("ERROR: graphics initialization failed.");
