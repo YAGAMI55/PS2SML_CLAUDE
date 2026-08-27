@@ -243,6 +243,15 @@ void draw_menu(int selected, int show_description)
     sw = gsGlobal->Width;
     sh = gsGlobal->Height;
 
+    {
+        static int logged_once = 0;
+        if (!logged_once) {
+            printf("DRAW_MENU: screen=%dx%d item_count=%d bg_loaded=%d\n",
+                   sw, sh, config.item_count, g_background_loaded);
+            logged_once = 1;
+        }
+    }
+
     gsKit_clear(
         gsGlobal,
         GS_SETREG_RGBAQ(0, 0, 0, 0, 0)
