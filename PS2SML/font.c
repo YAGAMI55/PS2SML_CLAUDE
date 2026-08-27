@@ -30,6 +30,7 @@ typedef struct
 
 static FT_Library g_library = NULL;
 static FT_Face g_face = NULL;
+static unsigned char *g_font_buffer = NULL;
 
 static GlyphCacheEntry g_cache[MAX_GLYPHS];
 
@@ -471,46 +472,106 @@ int init_font(const char *font_path)
         return 0;
 
     /*
-     * Initialize FreeType.
-     */
-    error =
-        FT_Init_FreeType(&g_library);
-
-    if (error != 0)
-    {
-        g_library = NULL;
-
-        printf("ERROR: FT_Init_FreeType failed: %d\n",
-               (int)error);
-
-        return 0;
-    }
-
-    /*
-     * Load first face from the font file.
+     * Load the entire font file into RAM once.
      *
-     * Both TTF and OTF are handled by FreeType.
+     * FT_New_Face() would stream glyph/table data directly from
+     * cdrom0: on every access, which is extremely slow on real
+     * PS2 CD/DVD hardware (and emulated drives). Loading the whole
+     * file up front and using FT_New_Memory_Face() means FreeType
+     * only ever touches RAM afterwards.
      */
-    error =
-        FT_New_Face(g_library,
-                    font_path,
-                    0,
-                    &g_face);
-
-    if (error != 0)
     {
-        printf("ERROR: could not load font: %s\n",
-               font_path);
+        FILE *f;
+        long size;
 
-        printf("ERROR: FreeType error: %d\n",
-               (int)error);
+        f = fopen(font_path, "rb");
 
-        FT_Done_FreeType(g_library);
+        if (!f)
+        {
+            printf("ERROR: could not open font: %s\n", font_path);
+            return 0;
+        }
 
-        g_library = NULL;
-        g_face = NULL;
+        fseek(f, 0, SEEK_END);
+        size = ftell(f);
+        fseek(f, 0, SEEK_SET);
 
-        return 0;
+        if (size <= 0)
+        {
+            fclose(f);
+            printf("ERROR: font file is empty: %s\n", font_path);
+            return 0;
+        }
+
+        g_font_buffer = (unsigned char *)malloc((size_t)size);
+
+        if (!g_font_buffer)
+        {
+            fclose(f);
+            printf("ERROR: out of memory loading font: %s\n", font_path);
+            return 0;
+        }
+
+        if (fread(g_font_buffer, 1, (size_t)size, f) != (size_t)size)
+        {
+            fclose(f);
+            free(g_font_buffer);
+            g_font_buffer = NULL;
+            printf("ERROR: failed reading font: %s\n", font_path);
+            return 0;
+        }
+
+        fclose(f);
+
+        /*
+         * Initialize FreeType.
+         */
+        error =
+            FT_Init_FreeType(&g_library);
+
+        if (error != 0)
+        {
+            g_library = NULL;
+
+            free(g_font_buffer);
+            g_font_buffer = NULL;
+
+            printf("ERROR: FT_Init_FreeType failed: %d\n",
+                   (int)error);
+
+            return 0;
+        }
+
+        /*
+         * Load first face from the in-memory font buffer.
+         *
+         * Both TTF and OTF are handled by FreeType.
+         */
+        error =
+            FT_New_Memory_Face(g_library,
+                               g_font_buffer,
+                               (FT_Long)size,
+                               0,
+                               &g_face);
+
+        if (error != 0)
+        {
+            printf("ERROR: could not load font: %s\n",
+                   font_path);
+
+            printf("ERROR: FreeType error: %d\n",
+                   (int)error);
+
+            FT_Done_FreeType(g_library);
+
+            g_library = NULL;
+            g_face = NULL;
+
+            free(g_font_buffer);
+            g_font_buffer = NULL;
+
+            return 0;
+        }
     }
 
     /*
@@ -772,5 +833,18 @@ void cleanup_font(void)
     {
         FT_Done_FreeType(g_library);
         g_library = NULL;
+    }
+
+    /*
+     * Release the in-memory font buffer.
+     *
+     * Must be freed only after FT_Done_Face()/FT_Done_FreeType(),
+     * since the face keeps pointers into this buffer while it is
+     * in use.
+     */
+    if (g_font_buffer)
+    {
+        free(g_font_buffer);
+        g_font_buffer = NULL;
     }
 }

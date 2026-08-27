@@ -140,8 +140,7 @@ int init_graphics(const char *video_mode)
      * A missing image must not prevent
      * the loader from starting.
      */
-    if (config.bg_path &&
-        config.bg_path[0] != '\0') {
+    if (config.bg_path[0] != '\0') {
 
         if (!load_background(config.bg_path)) {
             printf(
