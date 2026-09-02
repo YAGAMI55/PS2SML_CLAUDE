@@ -254,8 +254,19 @@ void draw_menu(int selected, int show_description)
 
     gsKit_clear(
         gsGlobal,
-        GS_SETREG_RGBAQ(0, 0, 0, 0, 0)
+        GS_SETREG_RGBAQ(0x00, 0x00, 0x80, 0x80, 0)
     );
+
+    gsKit_prim_sprite(
+        gsGlobal,
+        120, 120,
+        520, 320,
+        1,
+        GS_SETREG_RGBAQ(0xFF, 0x00, 0x00, 0xFF, 0)
+    );
+
+    gsKit_sync_flip(gsGlobal);
+    return;
 
     draw_background();
 
