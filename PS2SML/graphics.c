@@ -122,9 +122,12 @@ int init_graphics(const char *video_mode)
 
     dmaKit_chan_init(DMA_CHANNEL_GIF);
 
+    gsKit_vram_clear(gsGlobal);
     gsKit_init_screen(gsGlobal);
+    gsKit_display_buffer(gsGlobal);
+    gsKit_TexManager_init(gsGlobal);
 
-    gsKit_mode_switch(gsGlobal, GS_PERSISTENT);
+    gsKit_mode_switch(gsGlobal, GS_ONESHOT);
 
     gsKit_set_test(gsGlobal, GS_ATEST_OFF);
 
@@ -133,6 +136,7 @@ int init_graphics(const char *video_mode)
         GS_SETREG_RGBAQ(0, 0, 0, 0, 0)
     );
 
+    gsKit_queue_exec(gsGlobal);
     gsKit_sync_flip(gsGlobal);
 
     /*
@@ -254,19 +258,8 @@ void draw_menu(int selected, int show_description)
 
     gsKit_clear(
         gsGlobal,
-        GS_SETREG_RGBAQ(0x00, 0x00, 0x80, 0x80, 0)
+        GS_SETREG_RGBAQ(0, 0, 0, 0, 0)
     );
-
-    gsKit_prim_sprite(
-        gsGlobal,
-        120, 120,
-        520, 320,
-        1,
-        GS_SETREG_RGBAQ(0xFF, 0x00, 0x00, 0xFF, 0)
-    );
-
-    gsKit_sync_flip(gsGlobal);
-    return;
 
     draw_background();
 
@@ -405,6 +398,7 @@ void draw_menu(int selected, int show_description)
         );
     }
 
+    gsKit_queue_exec(gsGlobal);
     gsKit_sync_flip(gsGlobal);
 }
 
