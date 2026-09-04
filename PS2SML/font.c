@@ -407,8 +407,7 @@ static GlyphCacheEntry *build_glyph(GSGLOBAL *gsGlobal,
              */
             ((u32 *)entry->texture.Mem)
                 [y * (unsigned int)entry->width + x] =
-                    0xFFFFFF00u |
-                    (u32)alpha;
+                    ((u32)alpha << 24) | 0x00FFFFFFu;
         }
     }
 
