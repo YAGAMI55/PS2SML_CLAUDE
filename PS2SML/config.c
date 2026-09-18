@@ -52,10 +52,19 @@ static unsigned int hex_to_rgba(const char *hex, unsigned int fallback)
      * Configuration format:
      *   RRGGBB
      *
-     * gsKit uses RGBA byte order in the low 32 bits.
+     * gsKit color words are little-endian in memory: byte0=R,
+     * byte1=G, byte2=B, byte3=A. strtoul() above parsed the hex
+     * digits as a big-endian-style integer (R in the high byte),
+     * so the bytes must be reassembled here rather than simply
+     * shifted, or R and B end up swapped once stored to memory.
      */
-    if ((size_t)(end - hex) <= 6)
-        value = (value << 8) | 0xFF;
+    if ((size_t)(end - hex) <= 6) {
+        unsigned int r = (value >> 16) & 0xFFu;
+        unsigned int g = (value >> 8) & 0xFFu;
+        unsigned int b = value & 0xFFu;
+
+        value = r | (g << 8) | (b << 16) | (0xFFu << 24);
+    }
 
     return value;
 }
