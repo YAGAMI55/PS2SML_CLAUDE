@@ -407,7 +407,8 @@ static GlyphCacheEntry *build_glyph(GSGLOBAL *gsGlobal,
              */
             ((u32 *)entry->texture.Mem)
                 [y * (unsigned int)entry->width + x] =
-                    ((u32)alpha << 24) | 0x00FFFFFFu;
+                    (((u32)alpha * 128u / 255u) << 24) |
+                    0x00FFFFFFu;
         }
     }
 
@@ -640,8 +641,14 @@ void draw_text(GSGLOBAL *gsGlobal,
     pen_x = x;
     baseline_y = y;
 
+    /*
+     * GS alpha is 0-128, where 0x80 means fully opaque.
+     * The configuration colour carries 0xFF in its alpha byte,
+     * which overflows the blend and washes the glyph quad out
+     * into a solid block, so clamp it to 0x80 here.
+     */
     gs_color =
-        (u64)color;
+        (u64)((color & 0x00FFFFFFu) | (0x80u << 24));
 
     /*
      * Enable alpha testing for glyph textures.
