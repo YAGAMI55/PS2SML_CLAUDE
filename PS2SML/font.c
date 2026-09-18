@@ -655,7 +655,7 @@ void draw_text(GSGLOBAL *gsGlobal,
      */
     gsKit_set_primalpha(
         gsGlobal,
-        GS_BLEND_FRONT2BACK,
+        GS_SETREG_ALPHA(0, 1, 0, 1, 0),
         0);
 
     gsKit_set_test(

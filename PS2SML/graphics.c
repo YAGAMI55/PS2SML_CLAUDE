@@ -170,7 +170,7 @@ static void draw_background(void)
 
     gsKit_set_primalpha(
         gsGlobal,
-        GS_BLEND_BACK2FRONT,
+        GS_SETREG_ALPHA(0, 1, 0, 1, 0),
         0
     );
 
@@ -347,7 +347,7 @@ void draw_menu(int selected, int show_description)
 
         gsKit_set_primalpha(
             gsGlobal,
-            GS_BLEND_BACK2FRONT,
+            GS_SETREG_ALPHA(0, 1, 0, 1, 0),
             0
         );
 
